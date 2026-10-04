@@ -21,7 +21,7 @@ on:
         type: boolean
         default: true
       start_build:
-        description: "Start 'Build PyPath APK' after unzipping (if that workflow exists)"
+        description: "Start 'Build APK' after unzipping (if that workflow exists)"
         type: boolean
         default: true
 
@@ -163,10 +163,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -f .github/workflows/build-pypath-apk.yml ]; then
+          # Starts the universal (all ABIs) build. build-apk.yml defaults to arm64_only=false.
+          if [ -f .github/workflows/build-apk.yml ]; then
             sleep 10
-            gh workflow run build-pypath-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || { sleep 20; gh workflow run build-pypath-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"; }
-            echo "Started 'Build PyPath APK'. Open the Actions tab to follow it." >> "$GITHUB_STEP_SUMMARY"
+            gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f arm64_only=false || { sleep 20; gh workflow run build-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f arm64_only=false; }
+            echo "Started 'Build APK'. Open the Actions tab to follow it." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::notice::build-pypath-apk.yml is not in the repo yet. Add it, then run it from the Actions tab."
+            echo "::notice::build-apk.yml is not in the repo yet. Add it, then run it from the Actions tab."
           fi
