@@ -1,0 +1,172 @@
+name: Unzip PyPath update
+
+# How to use (phone is fine):
+#   1. Upload pypath-update.zip anywhere in the repo (Add file, Upload files) and commit.
+#   2. Actions, "Unzip PyPath update", Run workflow.
+# Every file in the zip lands at the same path in the repository (PyPath/...).
+# The zip is deleted afterwards (optional), one bot commit is pushed and the APK build starts.
+#
+# Workflow files inside a zip are never copied: GitHub does not let the built-in token write them.
+# This file has no backslashes on purpose, so it survives copy and paste on a phone.
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip_name:
+        description: "Zip file name (searched anywhere in the repo)"
+        type: string
+        default: "pypath-update.zip"
+      delete_zip:
+        description: "Delete the zip from the repo after unzipping"
+        type: boolean
+        default: true
+      start_build:
+        description: "Start 'Build PyPath APK' after unzipping (if that workflow exists)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: unzip-pypath-update
+  cancel-in-progress: false
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find the zip
+        id: find
+        env:
+          ZIP_NAME: ${{ inputs.zip_name }}
+        run: |
+          base="${ZIP_NAME%.zip}"
+          # Exact path first, then any file like "pypath-update.zip" or "pypath-update (1).zip".
+          if [ -f "$ZIP_NAME" ]; then
+            zip="$ZIP_NAME"
+          else
+            find . -path ./.git -prune -o -type f -iname "${base}*.zip" -print | sort > /tmp/zips.txt
+            zip=$(tail -n 1 /tmp/zips.txt)
+          fi
+          if [ -z "$zip" ] || [ ! -f "$zip" ]; then
+            echo "::error::Could not find $ZIP_NAME in the repository. Upload it first."
+            exit 1
+          fi
+          zip="${zip#./}"
+          echo "Using: $zip"
+          unzip -tq "$zip" || { echo "::error::$zip is not a valid zip file (upload it again)"; exit 1; }
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+
+      - name: Extract to a temporary folder
+        id: extract
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          rm -rf /tmp/upd && mkdir -p /tmp/upd
+          unzip -q -o "$ZIP" -d /tmp/upd
+          # Ignore macOS junk if the zip was re-packed on another device.
+          rm -rf /tmp/upd/__MACOSX
+          find /tmp/upd -name '.DS_Store' -delete
+
+          # The zip should contain PyPath/ at its top level. If it was wrapped in an extra
+          # folder (for example repo/PyPath/...), use the folder that contains PyPath/.
+          find /tmp/upd -maxdepth 3 -type d -name PyPath -print | awk '{ print length($0), $0 }' | sort -n > /tmp/roots.txt
+          root=$(head -n 1 /tmp/roots.txt | cut -d' ' -f2-)
+          [ -n "$root" ] || { echo "::error::No PyPath/ folder inside the zip"; exit 1; }
+          root=$(dirname "$root")
+          echo "Content root inside zip: $root"
+          [ -f "$root/PyPath/content/build_course.py" ] || { echo "::error::Zip does not look like a PyPath update"; exit 1; }
+          # Never copy workflow files from a zip.
+          rm -rf "$root/.github"
+          echo "root=$root" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to overwrite protected files
+        env:
+          ROOT: ${{ steps.extract.outputs.root }}
+        run: |
+          cd "$ROOT"
+          find . -type f | cut -c3- | sort > /tmp/files.txt
+          bad=""
+          while IFS= read -r f; do
+            case "$f" in
+              PyPath/app/src/main/java/com/pypath/app/practical/*|PyPath/app/src/main/java/com/pypath/app/ui/screens/practical/*|PyPath/app/src/main/python/*|PyPath/app/src/main/assets/practical/*|PyPath/app/src/androidTest/*|PyPath/app/src/main/java/com/pypath/app/ui/navigation/BottomTabs.kt|PyPath/app/build.gradle.kts|PyPath/build.gradle.kts|PyPath/settings.gradle.kts|PyPath/gradle/*|PyPath/gradlew*|PyPath/app/src/test/java/com/pypath/app/ScreenshotTest.kt)
+                bad="$bad $f" ;;
+            esac
+          done < /tmp/files.txt
+
+          # The manifest may only change if the Practical tab's Python service is kept exactly
+          # and no network or vibrate permission is added.
+          m="PyPath/app/src/main/AndroidManifest.xml"
+          if [ -f "$m" ]; then
+            grep -q 'android:name=".practical.PythonRunnerService"' "$m" || bad="$bad $m(missing-python-service)"
+            grep -q 'android:process=":python"' "$m" || bad="$bad $m(missing-python-process)"
+            if grep -q 'android.permission.INTERNET' "$m"; then bad="$bad $m(INTERNET)"; fi
+            if grep -q 'android.permission.VIBRATE' "$m"; then bad="$bad $m(VIBRATE)"; fi
+          fi
+
+          if [ -n "$bad" ]; then
+            echo "::error::The zip contains protected files, nothing was changed:"
+            for b in $bad; do echo "  $b"; done
+            exit 1
+          fi
+          echo "OK - no protected files in the zip."
+
+      - name: Copy files into the repository
+        env:
+          ROOT: ${{ steps.extract.outputs.root }}
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          echo "Files copied:"
+          cat /tmp/files.txt
+          cp -a "$ROOT/." "$GITHUB_WORKSPACE/"
+          {
+            echo "## Unzipped $ZIP"
+            echo
+            echo "Files placed at their repository paths:"
+            echo '```'
+            cat /tmp/files.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the zip
+        if: ${{ inputs.delete_zip }}
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          git rm -q --cached -- "$ZIP" || true
+          rm -f -- "$ZIP"
+
+      - name: Commit and push
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A PyPath
+          git add -A -- "$ZIP" 2>/dev/null || true
+          git status --short
+          if git diff --cached --quiet; then
+            echo "Nothing changed - the repository already matches the zip."
+          else
+            git commit -m "Apply PyPath update from $ZIP [bot]"
+            git push
+          fi
+
+      - name: Start the APK build
+        if: ${{ inputs.start_build }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f .github/workflows/build-pypath-apk.yml ]; then
+            sleep 10
+            gh workflow run build-pypath-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || { sleep 20; gh workflow run build-pypath-apk.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"; }
+            echo "Started 'Build PyPath APK'. Open the Actions tab to follow it." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::build-pypath-apk.yml is not in the repo yet. Add it, then run it from the Actions tab."
+          fi
