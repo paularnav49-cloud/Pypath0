@@ -1,16 +1,25 @@
 name: Build PyPath APK (course + sounds + APK)
 
-# One-shot build for PyPath v0.3.0:
-#   1. regenerates and validates the course JSON and the sound effects (Python 3.11, stdlib only)
-#   2. runs the unit tests (optional, Paparazzi snapshot tests are skipped)
-#   3. builds the debug APK with JDK 17 and attaches it to the run and to a GitHub Release
-# The Android project folder is found automatically (PyPath/ or the repo root), and if the
-# gradlew script is missing, Gradle 8.9 (the wrapper's version) is used instead.
-# Nothing is committed. Your existing build-apk.yml is left as it is.
+# Works in two situations:
+#   A) this repo has the whole Android project (PyPath/settings.gradle.kts, gradlew, app/...), or
+#   B) this repo only has the PyPath update files (content/, app/src/..., README.md).
+# In case B the full project is taken from BASE_REPO (default: paularnav49-cloud/Pypath4) and the
+# files from this repo are copied on top of it, so your update always wins.
+# Then: course JSON + sounds are generated and validated (Python 3.11), unit tests run
+# (Paparazzi skipped), and the debug APK is built with JDK 17 and published.
+# Nothing is committed to any repository.
 
 on:
   workflow_dispatch:
     inputs:
+      base_repo:
+        description: "Repo with the full PyPath project (used only if this repo is missing files)"
+        type: string
+        default: "paularnav49-cloud/Pypath4"
+      base_ref:
+        description: "Branch/tag/commit of the base repo"
+        type: string
+        default: "main"
       arm64_only:
         description: "Build only arm64-v8a (smaller APK, real phones only)"
         type: boolean
@@ -35,84 +44,127 @@ env:
   TAG: pypath-build-${{ github.run_number }}
 
 jobs:
-  # Python only runs in this job, so the Android build job never has a setup-python toolchain.
-  assets:
-    name: Generate course JSON and sounds
+  prepare:
+    name: Assemble project, generate course and sounds
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      proj: ${{ steps.locate.outputs.proj }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Locate the Android project
-        id: locate
+    timeout-minutes: 15
+    defaults:
+      run:
         shell: bash
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          path: self
+
+      - name: Checkout base project
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.base_repo }}
+          ref: ${{ inputs.base_ref }}
+          path: base
+
+      - name: Assemble the full Android project
         run: |
-          # The project folder is the one with settings.gradle(.kts) next to app/build.gradle.kts.
-          proj=""
-          for d in PyPath . $(find . -path ./.git -prune -o -name 'settings.gradle*' -print | xargs -r -n1 dirname | sort -u); do
-            d="${d#./}"; [ -z "$d" ] && d="."
-            if { [ -f "$d/settings.gradle.kts" ] || [ -f "$d/settings.gradle" ]; } && [ -f "$d/app/build.gradle.kts" ]; then
-              proj="$d"; break
+          set -euo pipefail
+
+          # Folder that holds settings.gradle(.kts) + app/build.gradle.kts, or "" if none.
+          find_project() {
+            local top="$1" d
+            for d in "$top/PyPath" "$top" $(find "$top" -maxdepth 4 -path '*/.git' -prune -o -name 'settings.gradle*' -print | xargs -r -n1 dirname | sort -u); do
+              if { [ -f "$d/settings.gradle.kts" ] || [ -f "$d/settings.gradle" ]; } && [ -f "$d/app/build.gradle.kts" ]; then
+                echo "$d"; return 0
+              fi
+            done
+            return 0
+          }
+          # Folder in this repo that holds the update (has content/build_course.py).
+          find_update() {
+            local top="$1" f
+            f=$(find "$top" -maxdepth 4 -path '*/.git' -prune -o -type f -path '*/content/build_course.py' -print | head -n 1)
+            [ -n "$f" ] && dirname "$(dirname "$f")" || true
+          }
+          complete() {
+            [ -f "$1/settings.gradle.kts" ] && [ -f "$1/app/build.gradle.kts" ] && [ -f "$1/gradlew" ] \
+              && [ -f "$1/gradle/wrapper/gradle-wrapper.jar" ] && [ -f "$1/app/src/main/AndroidManifest.xml" ]
+          }
+
+          self_proj=$(find_project self)
+          if [ -n "$self_proj" ] && complete "$self_proj"; then
+            echo "This repo has the complete project: $self_proj"
+            mkdir -p project
+            cp -a "$self_proj/." project/
+          else
+            base_proj=$(find_project base)
+            if [ -z "$base_proj" ]; then
+              echo "::error::The base repo ${{ inputs.base_repo }}@${{ inputs.base_ref }} has no Android project either."
+              exit 1
             fi
-          done
-          if [ -z "$proj" ]; then
-            echo "::error::No Android project found (settings.gradle.kts + app/build.gradle.kts). Files in the repo:"
-            find . -maxdepth 3 -path ./.git -prune -o -print | sort | head -100
-            exit 1
+            echo "Using the full project from ${{ inputs.base_repo }}@${{ inputs.base_ref }} ($base_proj)"
+            mkdir -p project
+            cp -a "$base_proj/." project/
+
+            upd=$(find_update self)
+            [ -z "$upd" ] && upd="$self_proj"
+            if [ -z "$upd" ]; then
+              echo "::error::No PyPath update files (content/build_course.py) found in this repo."
+              exit 1
+            fi
+            echo "Copying update files from this repo ($upd) on top:"
+            (cd "$upd" && find . -type f ! -path './.git/*' | sed 's#^./#  #' | sort)
+            cp -a "$upd/." project/
           fi
-          echo "Android project folder: $proj"
-          [ -f "$proj/content/build_course.py" ] || { echo "::error::$proj/content/build_course.py is missing - apply the PyPath update first"; exit 1; }
-          [ -f "$proj/content/build_sounds.py" ] || { echo "::error::$proj/content/build_sounds.py is missing - apply the PyPath update first"; exit 1; }
-          echo "proj=$proj" >> "$GITHUB_OUTPUT"
+          rm -rf project/.git project/build project/app/build project/.gradle
+
+          # Final check: everything Gradle needs must be there now.
+          for f in settings.gradle.kts build.gradle.kts app/build.gradle.kts app/src/main/AndroidManifest.xml \
+                   content/build_course.py content/build_sounds.py; do
+            [ -f "project/$f" ] || { echo "::error::Assembled project is missing $f"; exit 1; }
+          done
+          echo "Assembled project:"
+          ls -la project
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Build and validate course JSON
-        run: python "${{ steps.locate.outputs.proj }}/content/build_course.py"
+        run: python project/content/build_course.py
 
       - name: Build sound effects
-        run: python "${{ steps.locate.outputs.proj }}/content/build_sounds.py"
+        run: python project/content/build_sounds.py
 
-      - name: Upload generated files
+      - name: Pack project
+        # A tarball keeps file permissions (gradlew stays executable).
+        run: tar -czf project.tgz project
+
+      - name: Upload project
         uses: actions/upload-artifact@v4
         with:
-          name: generated-assets
-          path: |
-            ${{ steps.locate.outputs.proj }}/app/src/main/assets/course
-            ${{ steps.locate.outputs.proj }}/app/src/main/res/raw
+          name: project-src
+          path: project.tgz
           if-no-files-found: error
           retention-days: 1
 
   build:
     name: Build APK
-    needs: assets
+    needs: prepare
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      PROJ: ${{ needs.assets.outputs.proj }}
     defaults:
       run:
         shell: bash
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use freshly generated course and sounds
+      - name: Download project
         uses: actions/download-artifact@v4
         with:
-          name: generated-assets
-          path: ${{ env.PROJ }}/app/src/main
+          name: project-src
 
-      - name: Check project files and choose Gradle
+      - name: Unpack and choose Gradle
         id: gradle
         run: |
-          cd "$PROJ"
-          echo "Android project folder: $PROJ"
-          ls -la
+          tar -xzf project.tgz
+          cd project
           test -f app/src/main/assets/course/levels/l7.json || { echo "::error::course levels missing"; exit 1; }
           test -f app/src/main/res/raw/badge_l7.wav         || { echo "::error::sounds missing"; exit 1; }
           if [ -f gradlew ] && [ -f gradle/wrapper/gradle-wrapper.jar ]; then
@@ -121,7 +173,7 @@ jobs:
             echo "cmd=./gradlew" >> "$GITHUB_OUTPUT"
             echo "wrapper=true"  >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::gradlew or gradle/wrapper/gradle-wrapper.jar is missing in $PROJ - using Gradle 8.9 from setup-gradle instead. Re-add the wrapper files when you can."
+            echo "::warning::Gradle wrapper missing - using Gradle 8.9 from setup-gradle."
             echo "cmd=gradle"    >> "$GITHUB_OUTPUT"
             echo "wrapper=false" >> "$GITHUB_OUTPUT"
           fi
@@ -136,7 +188,7 @@ jobs:
         if: ${{ steps.gradle.outputs.wrapper == 'true' }}
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Set up Gradle 8.9 (no wrapper in repo)
+      - name: Set up Gradle 8.9 (no wrapper)
         if: ${{ steps.gradle.outputs.wrapper != 'true' }}
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -158,8 +210,8 @@ jobs:
 
       - name: Unit tests
         if: ${{ inputs.run_tests }}
+        working-directory: project
         run: |
-          cd "$PROJ"
           ${{ steps.gradle.outputs.cmd }} testDebugUnitTest --no-daemon --stacktrace \
             --tests 'com.pypath.app.ContentTest' \
             --tests 'com.pypath.app.ProgressionTest' \
@@ -173,23 +225,22 @@ jobs:
       # Only changes the runner's copy of the file for this build; nothing is committed.
       - name: Limit ABIs to arm64-v8a
         if: ${{ inputs.arm64_only }}
+        working-directory: project
         run: |
-          cd "$PROJ"
           sed -i -E 's/^([[:space:]]*)ndk[[:space:]]*{[[:space:]]*abiFilters.*$/\u0001ndk { abiFilters.clear(); abiFilters += listOf("arm64-v8a") }/' app/build.gradle.kts
           grep -n 'abiFilters' app/build.gradle.kts
           grep -q 'abiFilters += listOf("arm64-v8a") }' app/build.gradle.kts \
             || { echo "::error::Failed to rewrite abiFilters in app/build.gradle.kts"; exit 1; }
 
       - name: Build debug APK
-        run: |
-          cd "$PROJ"
-          ${{ steps.gradle.outputs.cmd }} assembleDebug --no-daemon --stacktrace
+        working-directory: project
+        run: ${{ steps.gradle.outputs.cmd }} assembleDebug --no-daemon --stacktrace
 
       - name: Verify and stage APK
         id: apk
         run: |
-          APK_SRC="$PROJ/app/build/outputs/apk/debug/app-debug.apk"
-          [ -f "$APK_SRC" ] || { echo "::error::No APK at $APK_SRC"; find . -name '*.apk'; exit 1; }
+          APK_SRC="project/app/build/outputs/apk/debug/app-debug.apk"
+          [ -f "$APK_SRC" ] || { echo "::error::No APK at $APK_SRC"; find project -name '*.apk'; exit 1; }
           unzip -tq "$APK_SRC"                                         || { echo "::error::APK is not a valid zip"; exit 1; }
           unzip -l "$APK_SRC" | grep -q 'AndroidManifest.xml'          || { echo "::error::no AndroidManifest.xml"; exit 1; }
           unzip -l "$APK_SRC" | grep -q 'classes.dex'                  || { echo "::error::no classes.dex"; exit 1; }
