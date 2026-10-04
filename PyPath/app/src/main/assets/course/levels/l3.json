@@ -139,14 +139,14 @@
             "id": "l3s1q1",
             "prompt": "What does this code print?",
             "options": [
-              "1\n2\n3",
-              "0\n1\n2\n3",
-              "3",
-              "0\n1\n2"
+              "0\n3\n6\n9",
+              "3\n6\n9",
+              "0\n1\n2",
+              "0\n3\n6"
             ],
             "correctIndex": 3,
-            "explanation": "range(3) starts at 0 and stops before 3, so i is 0, 1, 2. Many beginners expect 1 to 3, but counting starts at 0.",
-            "code": "for i in range(3):\n    print(i)"
+            "explanation": "range(0, 9, 3) starts at 0 and jumps by 3: 0, 3, 6. 9 is the stop number and range always stops before it, so 9 is not printed. The third number is the step, so it does not count 0, 1, 2.",
+            "code": "for n in range(0, 9, 3):\n    print(n)"
           },
           {
             "id": "l3s1q2",
@@ -175,7 +175,7 @@
           },
           {
             "id": "l3s1q4",
-            "prompt": "Fill in the blank so the loop prints 1 to 10: for n in range(____):",
+            "prompt": "Fill in the blank so the loop prints the numbers 1 to 10.",
             "options": [
               "1, 11",
               "1, 10",
@@ -183,7 +183,8 @@
               "10"
             ],
             "correctIndex": 0,
-            "explanation": "The stop number is never included, so to reach 10 you stop at 11. range(1, 10) would stop at 9."
+            "explanation": "The stop number is never included, so to reach 10 you stop at 11. range(1, 10) would stop at 9.",
+            "code": "for n in range(____):\n    print(n)"
           },
           {
             "id": "l3s1q5",
@@ -476,27 +477,27 @@
             "id": "l3s3q1",
             "prompt": "What does this code print?",
             "options": [
-              "0\n1",
-              "0\n1\n2",
-              "2",
-              "0\n1\n3\n4"
+              "1\n2",
+              "1\n2\n3",
+              "3",
+              "1\n2\n4\n5"
             ],
             "correctIndex": 0,
-            "explanation": "When i is 2, break ends the loop before print runs, so only 0 and 1 are shown. break does not skip just one number — it stops the loop.",
-            "code": "for i in range(5):\n    if i == 2:\n        break\n    print(i)"
+            "explanation": "When n is 3, break ends the loop before print runs, so only 1 and 2 are shown. break does not skip just one number — it stops the loop.",
+            "code": "for n in range(1, 6):\n    if n == 3:\n        break\n    print(n)"
           },
           {
             "id": "l3s3q2",
             "prompt": "What does this code print?",
             "options": [
-              "0\n1\n2\n3",
-              "0",
-              "2\n3",
-              "0\n2\n3"
+              "1\n2\n3\n4",
+              "1",
+              "3\n4",
+              "1\n3\n4"
             ],
             "correctIndex": 3,
-            "explanation": "continue skips only the repeat where i is 1. The loop keeps going, so 2 and 3 are still printed.",
-            "code": "for i in range(4):\n    if i == 1:\n        continue\n    print(i)"
+            "explanation": "continue skips only the repeat where n is 2. The loop keeps going, so 3 and 4 are still printed. Stopping after 1 is what break would do.",
+            "code": "for n in range(1, 5):\n    if n == 2:\n        continue\n    print(n)"
           },
           {
             "id": "l3s3q3",
@@ -749,12 +750,12 @@
             "prompt": "To print 1 2 3 on one line, what goes in the blank? print(n, ____)",
             "options": [
               "end=\" \"",
-              "sep=\" \"",
+              "space=\" \"",
               "\" \"",
               "line=False"
             ],
             "correctIndex": 0,
-            "explanation": "end=\" \" replaces the new line with a space. sep only changes what goes between several values in the same print.",
+            "explanation": "end=\" \" replaces the new line with a space. Writing just \" \" prints a space as a second value but still moves to a new line every time, and print has no space or line setting.",
             "code": "for n in range(1, 4):\n    print(n, ____)"
           },
           {

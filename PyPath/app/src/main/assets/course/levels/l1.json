@@ -104,13 +104,13 @@
             "id": "l1s1q1",
             "prompt": "What does print() do in Python?",
             "options": [
-              "Takes user input",
-              "Displays output",
-              "Creates a variable",
+              "Runs the program again",
+              "Shows something on the screen",
+              "Turns text into a comment",
               "Ends the program"
             ],
             "correctIndex": 1,
-            "explanation": "print() shows whatever you put inside the parentheses on the screen."
+            "explanation": "print() shows whatever you put inside the parentheses on the screen. It does not restart or end the program, and only # makes a comment."
           },
           {
             "id": "l1s1q2",
@@ -122,7 +122,7 @@
               "Error"
             ],
             "correctIndex": 2,
-            "explanation": "Without quotes Python treats 2 + 3 as maths and prints the result, 5.",
+            "explanation": "Without quotes, 2 + 3 is maths, so Python works it out and prints 5. print shows the value without quotes, so it is not \"5\", and you would only see 2 + 3 if it were inside quotes.",
             "code": "print(2 + 3)"
           },
           {
@@ -135,7 +135,7 @@
               "/*"
             ],
             "correctIndex": 1,
-            "explanation": "In Python, everything after # on a line is a comment."
+            "explanation": "In Python, everything after # on a line is a comment that Python ignores. //, -- and /* are used in other languages, not in Python."
           },
           {
             "id": "l1s1q4",
@@ -147,7 +147,7 @@
               "Shortest line first"
             ],
             "correctIndex": 2,
-            "explanation": "Python runs instructions one after another, from the top of the file to the bottom."
+            "explanation": "Python reads your code line by line, starting at the top, so the first line runs first. It never picks lines at random or starts from the bottom."
           }
         ],
         "passPercent": 60
@@ -249,11 +249,11 @@
             "options": [
               "city = \"Pune\"",
               "\"Pune\" = city",
-              "city == \"Pune\"",
+              "city \"Pune\"",
               "var city = \"Pune\""
             ],
             "correctIndex": 0,
-            "explanation": "The variable name goes on the left, the value on the right of a single =."
+            "explanation": "The variable name goes on the left, then a single =, then the value. Putting the value on the left is backwards, leaving out = stores nothing, and Python does not use the word var."
           },
           {
             "id": "l1s2q2",
@@ -290,7 +290,7 @@
               "Error"
             ],
             "correctIndex": 2,
-            "explanation": "a is 3 and b is 4, so a + b is 7.",
+            "explanation": "a is 3 and b is 4, so a + b is 7. print shows the values, not the words a + b, and numbers are added, so the answer is not 34.",
             "code": "a = 3\nb = 4\nprint(a + b)"
           }
         ],
@@ -395,7 +395,7 @@
               "bool"
             ],
             "correctIndex": 2,
-            "explanation": "Numbers with a decimal point are floats."
+            "explanation": "3.14 has a decimal point, so it is a float. int is only for whole numbers like 42, and a str would need quotes."
           },
           {
             "id": "l1s3q2",
@@ -417,10 +417,10 @@
               "\"True\"",
               "True",
               "1.0",
-              "'yes'"
+              "\"yes\""
             ],
             "correctIndex": 1,
-            "explanation": "True (without quotes) is a boolean. With quotes it would be a string."
+            "explanation": "True without quotes is a bool. \"True\" and \"yes\" have quotes, so they are text (str), and 1.0 is a float."
           },
           {
             "id": "l1s3q4",
@@ -432,7 +432,7 @@
               "int()"
             ],
             "correctIndex": 3,
-            "explanation": "int() converts a value to an integer (whole number)."
+            "explanation": "int() turns text like \"42\" into the whole number 42. float() gives a decimal number, str() makes text, and type() only tells you the type."
           }
         ],
         "passPercent": 60
@@ -547,7 +547,7 @@
               "input().int"
             ],
             "correctIndex": 0,
-            "explanation": "Wrap input() inside int() to convert the result."
+            "explanation": "input() gives the answer as text, and wrapping it in int() turns that text into a whole number. input(int()) puts int() inside the question instead, and Python has no number() function or .int."
           },
           {
             "id": "l1s4q3",
@@ -572,7 +572,7 @@
               "An error"
             ],
             "correctIndex": 2,
-            "explanation": "The text inside input() is shown as a prompt before the user types."
+            "explanation": "The text inside input() is the question shown to the user before they type, so they see Age: . It is not an error, and Python shows your text, not the word input."
           }
         ],
         "passPercent": 60

@@ -331,7 +331,7 @@
               ":2f"
             ],
             "correctIndex": 0,
-            "explanation": ":.2f means 2 decimal places. :2f would set a width of 2 instead, which doesn't round anything.",
+            "explanation": ":.2f means 2 decimal places, so 12.3456 shows as 12.35. Without the dot, :2 only sets a width of 2 and shows 12.3456 unchanged, and :2f shows 12.345600, not 2 decimals. .2 without the colon is an error.",
             "code": "total = 12.3456\nprint(f\"{total____}\")"
           }
         ],
@@ -546,13 +546,13 @@
             "id": "l6s3q7",
             "prompt": "Fill in the blank to count words safely.",
             "options": [
-              "find",
-              "pop",
-              "index",
+              "count",
+              "append",
+              "values",
               "get"
             ],
             "correctIndex": 3,
-            "explanation": "get(word, 0) returns the current count, or 0 if the word is new. pop would remove the entry.",
+            "explanation": "get(word, 0) returns the current count, or 0 if the word is new, and then 1 is added. Dictionaries have no count() or append() method, and values() takes no word.",
             "code": "counts[word] = counts.____(word, 0) + 1"
           },
           {
@@ -671,7 +671,7 @@
               "a\nb",
               "1\n2",
               "a 1\nb 2",
-              "('a', 1)\n('b', 2)"
+              "a: 1\nb: 2"
             ],
             "correctIndex": 0,
             "explanation": "Looping over a dictionary gives its keys. To get values you need .values() or .items().",
@@ -683,11 +683,11 @@
             "options": [
               "x\ny",
               "3\n4",
-              "('x', 3)\n('y', 4)",
+              "{'x': 3}\n{'y': 4}",
               "x 3\ny 4"
             ],
             "correctIndex": 3,
-            "explanation": "items() gives each pair and the two variables take it apart, so print shows key and value with a space.",
+            "explanation": "items() gives each key with its value and the two variables take the pair apart, so print(k, v) shows the key and the value with a space. Only k would give x and y.",
             "code": "d = {\"x\": 3, \"y\": 4}\nfor k, v in d.items():\n    print(k, v)"
           },
           {
@@ -707,10 +707,10 @@
             "id": "l6s4q4",
             "prompt": "What does .items() give you?",
             "options": [
-              "Only the values",
+              "Only the values, one at a time",
               "Each key together with its value, as pairs",
-              "Only the keys",
-              "The number of pairs"
+              "Only the keys, in the order added",
+              "The number of key-value pairs"
             ],
             "correctIndex": 1,
             "explanation": "items() gives key-value pairs. Only values is .values(), and the count is len(d)."

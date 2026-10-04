@@ -82,7 +82,7 @@
         "questions": [
           {
             "id": "l4s1q1",
-            "prompt": "Which keyword starts a function definition?",
+            "prompt": "Which word starts a function definition?",
             "options": [
               "def",
               "function",
@@ -263,11 +263,11 @@
             "options": [
               "Arguments",
               "Parameters",
-              "Return values",
-              "Global variables"
+              "Function names",
+              "Function calls"
             ],
             "correctIndex": 1,
-            "explanation": "The names in the def line are parameters. Arguments are the values you pass when calling, like area(3, 4)."
+            "explanation": "The names in the def line are parameters. Arguments are the values you pass when calling, like area(3, 4). The function's name is area, and area(3, 4) is a call."
           },
           {
             "id": "l4s2q3",
@@ -426,13 +426,13 @@
             "id": "l4s3q3",
             "prompt": "What does return do?",
             "options": [
-              "Prints the value on the screen",
-              "Sends a value back to the caller and ends the function",
-              "Repeats the function from the top",
-              "Saves the value to a file"
+              "Prints the value on the screen for the user",
+              "Sends a value back to the code that called it and ends the function",
+              "Runs the function again from the very top",
+              "Saves the value so every function can use it"
             ],
             "correctIndex": 1,
-            "explanation": "return gives a value back to the code that called the function. Showing it on screen is print's job."
+            "explanation": "return gives a value back to the code that called the function, and the function stops there. Showing it on screen is print's job, and return does not repeat the function."
           },
           {
             "id": "l4s3q4",
@@ -583,12 +583,12 @@
             "prompt": "When is a default value used?",
             "options": [
               "When the caller doesn't pass a value for that parameter",
-              "Always, even if a value is passed",
-              "Only when the function returns None",
-              "Only for keyword arguments"
+              "Always, even when the caller passes a different value",
+              "Only when the function has no return line",
+              "Only when the call uses keyword arguments"
             ],
             "correctIndex": 0,
-            "explanation": "A passed value always replaces the default. The default only fills in when nothing is given."
+            "explanation": "A passed value always replaces the default. The default only fills in when nothing is given, with or without keyword arguments."
           }
         ],
         "passPercent": 60
@@ -706,12 +706,12 @@
             "prompt": "What happens when this runs?",
             "options": [
               "It prints 5",
-              "A NameError, because y only exists inside f",
+              "A NameError",
               "It prints None",
-              "It prints 0"
+              "A TypeError"
             ],
             "correctIndex": 1,
-            "explanation": "y is local to f and disappears when f ends. Calling f() first doesn't make y available outside.",
+            "explanation": "y is local to f and disappears when f ends, so print(y) can't find it and Python raises a NameError. Calling f() first doesn't make y available outside, so it does not print 5.",
             "code": "def f():\n    y = 5\n\nf()\nprint(y)"
           },
           {
@@ -744,13 +744,13 @@
             "id": "l4s5q4",
             "prompt": "What is a local variable?",
             "options": [
-              "A variable every function can change",
-              "A variable created at the top of the file",
-              "A variable created inside a function that only exists while it runs",
-              "A variable that never changes"
+              "A variable that every function in the file can change",
+              "A variable created at the top of the file, outside functions",
+              "A variable made inside a function that exists only during the call",
+              "A variable whose value can never be changed"
             ],
             "correctIndex": 2,
-            "explanation": "Local means \"belongs to this function call\". A variable at the top of the file is global."
+            "explanation": "Local means \"belongs to this function call\". A variable at the top of the file, outside all functions, is global."
           },
           {
             "id": "l4s5q5",
@@ -768,13 +768,13 @@
             "id": "l4s5q6",
             "prompt": "Calling add(5) raises an error. What's the cleanest fix?",
             "options": [
-              "Rename n to total",
-              "Pass total in and return the new value: total = add(total, 5)",
-              "Call add() twice",
-              "Delete the line total = 0"
+              "Call add(5) twice so that total exists first",
+              "Take total as a parameter and return total + n",
+              "Delete the line total = 0 at the top of the file",
+              "Add print(total) as the first line inside add"
             ],
             "correctIndex": 1,
-            "explanation": "Assigning total inside the function makes it local, so total + n has nothing to read. Passing it in and returning it avoids the problem.",
+            "explanation": "Assigning total inside the function makes it local, so total + n has nothing to read yet. Passing total in and returning the new value (total = add(total, 5)) avoids the problem. Calling twice, deleting the global or printing it first still leaves total local, so the error stays.",
             "code": "total = 0\n\ndef add(n):\n    total = total + n\n\nadd(5)"
           },
           {

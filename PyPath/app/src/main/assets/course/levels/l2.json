@@ -87,11 +87,11 @@
             "prompt": "What is printed?",
             "options": [
               "True",
-              "False",
               "10",
+              "False",
               "Error"
             ],
-            "correctIndex": 1,
+            "correctIndex": 2,
             "explanation": "10 is not less than 3, so the comparison is False.",
             "code": "print(10 < 3)"
           }
@@ -162,13 +162,13 @@
             "id": "l2s2q1",
             "prompt": "What must end an if line?",
             "options": [
-              "A semicolon ;",
               "A colon :",
+              "A semicolon ;",
               "A period .",
               "Nothing"
             ],
-            "correctIndex": 1,
-            "explanation": "Every if, else and elif line ends with a colon."
+            "correctIndex": 0,
+            "explanation": "Every if line, and every else line, ends with a colon :. Leaving it out is an error, and Python does not use ; or . here."
           },
           {
             "id": "l2s2q2",
@@ -188,12 +188,12 @@
             "prompt": "How does Python know which lines belong to an if?",
             "options": [
               "Curly braces { }",
-              "Indentation",
               "The word end",
+              "Indentation",
               "Line numbers"
             ],
-            "correctIndex": 1,
-            "explanation": "Python groups code by indentation, usually 4 spaces."
+            "correctIndex": 2,
+            "explanation": "Python groups the lines of an if by indentation, usually 4 spaces. It does not use curly braces, an end word or line numbers for this."
           }
         ],
         "passPercent": 60
@@ -254,11 +254,11 @@
             "options": [
               "else if",
               "end if",
-              "elevate if",
+              "exit if",
               "either if"
             ],
             "correctIndex": 0,
-            "explanation": "elif is short for else if."
+            "explanation": "elif is short for else if: when the condition above is False, Python tries this one. It does not end or exit the if."
           },
           {
             "id": "l2s3q2",
@@ -275,15 +275,15 @@
           },
           {
             "id": "l2s3q3",
-            "prompt": "How many branches of an if/elif/else chain can run?",
+            "prompt": "In one if / elif / else chain, how many of the branches run?",
             "options": [
-              "All of them",
-              "Exactly one at most",
+              "Every branch that is True",
               "Two",
-              "None ever"
+              "Exactly one",
+              "None of them"
             ],
-            "correctIndex": 1,
-            "explanation": "Only the first branch whose condition is True runs (or else if none are)."
+            "correctIndex": 2,
+            "explanation": "Python checks the conditions from top to bottom and runs only the first branch that is True, or the else if none are. Later branches are skipped even if their condition is also True."
           }
         ],
         "passPercent": 60
