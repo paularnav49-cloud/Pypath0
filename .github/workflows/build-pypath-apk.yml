@@ -81,12 +81,15 @@ jobs:
           # Folder in this repo that holds the update (has content/build_course.py).
           find_update() {
             local top="$1" f
-            f=$(find "$top" -maxdepth 4 -path '*/.git' -prune -o -type f -path '*/content/build_course.py' -print | head -n 1)
+            f=$(find "$top" -maxdepth 4 -path '*/.git' -prune -o -type f -path '*/content/build_course.py' -print -quit)
             [ -n "$f" ] && dirname "$(dirname "$f")" || true
           }
           complete() {
-            [ -f "$1/settings.gradle.kts" ] && [ -f "$1/app/build.gradle.kts" ] && [ -f "$1/gradlew" ] \
-              && [ -f "$1/gradle/wrapper/gradle-wrapper.jar" ] && [ -f "$1/app/src/main/AndroidManifest.xml" ]
+            [ -f "$1/settings.gradle.kts" ] &&
+              [ -f "$1/app/build.gradle.kts" ] &&
+              [ -f "$1/gradlew" ] &&
+              [ -f "$1/gradle/wrapper/gradle-wrapper.jar" ] &&
+              [ -f "$1/app/src/main/AndroidManifest.xml" ]
           }
 
           self_proj=$(find_project self)
@@ -111,14 +114,13 @@ jobs:
               exit 1
             fi
             echo "Copying update files from this repo ($upd) on top:"
-            (cd "$upd" && find . -type f ! -path './.git/*' | sed 's#^./#  #' | sort)
+            (cd "$upd" && find . -type f ! -path './.git/*' | cut -c3- | sort)
             cp -a "$upd/." project/
           fi
           rm -rf project/.git project/build project/app/build project/.gradle
 
           # Final check: everything Gradle needs must be there now.
-          for f in settings.gradle.kts build.gradle.kts app/build.gradle.kts app/src/main/AndroidManifest.xml \
-                   content/build_course.py content/build_sounds.py; do
+          for f in settings.gradle.kts build.gradle.kts app/build.gradle.kts app/src/main/AndroidManifest.xml content/build_course.py content/build_sounds.py; do
             [ -f "project/$f" ] || { echo "::error::Assembled project is missing $f"; exit 1; }
           done
           echo "Assembled project:"
@@ -212,25 +214,43 @@ jobs:
         if: ${{ inputs.run_tests }}
         working-directory: project
         run: |
-          ${{ steps.gradle.outputs.cmd }} testDebugUnitTest --no-daemon --stacktrace \
-            --tests 'com.pypath.app.ContentTest' \
-            --tests 'com.pypath.app.ProgressionTest' \
-            --tests 'com.pypath.app.McqSessionTest' \
-            --tests 'com.pypath.app.PracticalTest' \
-            --tests 'com.pypath.app.CourseContentTest' \
-            --tests 'com.pypath.app.ProjectTest' \
-            --tests 'com.pypath.app.BadgeTest' \
-            --tests 'com.pypath.app.OldProgressTest'
+          # Paparazzi ScreenshotTest is deliberately not in this list.
+          tests=(
+            --tests com.pypath.app.ContentTest
+            --tests com.pypath.app.ProgressionTest
+            --tests com.pypath.app.McqSessionTest
+            --tests com.pypath.app.PracticalTest
+            --tests com.pypath.app.CourseContentTest
+            --tests com.pypath.app.ProjectTest
+            --tests com.pypath.app.BadgeTest
+            --tests com.pypath.app.OldProgressTest
+          )
+          ${{ steps.gradle.outputs.cmd }} testDebugUnitTest --no-daemon --stacktrace "${tests[@]}"
 
       # Only changes the runner's copy of the file for this build; nothing is committed.
       - name: Limit ABIs to arm64-v8a
         if: ${{ inputs.arm64_only }}
         working-directory: project
+        env:
+          ABI_LINE: 'ndk { abiFilters.clear(); abiFilters += listOf("arm64-v8a") }'
         run: |
-          sed -i -E 's/^([[:space:]]*)ndk[[:space:]]*{[[:space:]]*abiFilters.*$/\u0001ndk { abiFilters.clear(); abiFilters += listOf("arm64-v8a") }/' app/build.gradle.kts
-          grep -n 'abiFilters' app/build.gradle.kts
-          grep -q 'abiFilters += listOf("arm64-v8a") }' app/build.gradle.kts \
-            || { echo "::error::Failed to rewrite abiFilters in app/build.gradle.kts"; exit 1; }
+          # Replaces the single "ndk { abiFilters ... }" line, keeping its indentation.
+          # Written without backslashes so copy/paste on a phone cannot break it.
+          awk -v repl="$ABI_LINE" '{
+            if (index($0, "ndk") > 0 && index($0, "abiFilters") > 0 && index($0, "{") > 0) {
+              lead = substr($0, 1, match($0, /[^[:space:]]/) - 1)
+              print lead repl
+            } else {
+              print
+            }
+          }' app/build.gradle.kts > build.gradle.kts.new
+          mv build.gradle.kts.new app/build.gradle.kts
+          echo "abiFilters line now:"
+          grep -n "abiFilters" app/build.gradle.kts
+          if ! grep -qF "$ABI_LINE" app/build.gradle.kts; then
+            echo "::error::Could not set abiFilters to arm64-v8a in app/build.gradle.kts"
+            exit 1
+          fi
 
       - name: Build debug APK
         working-directory: project
@@ -241,13 +261,23 @@ jobs:
         run: |
           APK_SRC="project/app/build/outputs/apk/debug/app-debug.apk"
           [ -f "$APK_SRC" ] || { echo "::error::No APK at $APK_SRC"; find project -name '*.apk'; exit 1; }
-          unzip -tq "$APK_SRC"                                         || { echo "::error::APK is not a valid zip"; exit 1; }
-          unzip -l "$APK_SRC" | grep -q 'AndroidManifest.xml'          || { echo "::error::no AndroidManifest.xml"; exit 1; }
-          unzip -l "$APK_SRC" | grep -q 'classes.dex'                  || { echo "::error::no classes.dex"; exit 1; }
-          unzip -l "$APK_SRC" | grep -q 'libpython3.11.so'             || { echo "::error::Chaquopy Python runtime missing"; exit 1; }
-          unzip -l "$APK_SRC" | grep -q 'assets/course/levels/l7.json' || { echo "::error::course files missing from APK"; exit 1; }
-          unzip -l "$APK_SRC" | grep -q 'res/raw/badge_l7.wav'         || { echo "::error::sound files missing from APK"; exit 1; }
-          grep -aq 'APK Sig Block 42' "$APK_SRC"                       || { echo "::error::no v2 signature"; exit 1; }
+          unzip -tq "$APK_SRC" || { echo "::error::APK is not a valid zip"; exit 1; }
+          # List the APK once into a file (grep -q on a pipe can fail under pipefail).
+          unzip -l "$APK_SRC" > apk-contents.txt
+          for p in AndroidManifest.xml classes.dex libpython3.11.so assets/course/levels/l7.json res/raw/badge_l7.wav; do
+            if grep -qF "$p" apk-contents.txt; then
+              echo "OK: $p"
+            else
+              echo "::error::$p is missing from the APK"
+              exit 1
+            fi
+          done
+          if grep -aqF 'APK Sig Block 42' "$APK_SRC"; then
+            echo "OK: v2 signature"
+          else
+            echo "::error::APK has no v2 signature"
+            exit 1
+          fi
 
           if [ "${{ inputs.arm64_only }}" = "true" ]; then ABI=arm64-v8a; else ABI=universal; fi
           NAME="PyPath-v0.3.0-debug-${ABI}-build${{ github.run_number }}.apk"
@@ -292,6 +322,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | tee assets.txt
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' > assets.txt
+          cat assets.txt
           grep -qx "${{ steps.apk.outputs.name }}" assets.txt || { echo "::error::APK not attached to release"; exit 1; }
           echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/${{ steps.apk.outputs.name }}" >> "$GITHUB_STEP_SUMMARY"
