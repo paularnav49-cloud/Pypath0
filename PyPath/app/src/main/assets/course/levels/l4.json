@@ -1,0 +1,799 @@
+{
+  "id": "l4",
+  "number": 4,
+  "title": "Functions",
+  "description": "Package code into reusable building blocks with parameters, return values and scope.",
+  "subLevels": [
+    {
+      "id": "l4s1",
+      "code": "4.1",
+      "title": "Defining functions",
+      "summary": "Write your own reusable commands with def.",
+      "estimatedMinutes": 5,
+      "steps": [
+        "learn",
+        "quiz"
+      ],
+      "lesson": {
+        "pages": [
+          {
+            "title": "What is a function?",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "You already use functions: print(), input(), int() and range(). A function is a named block of code that does one job. Now you will write your own."
+              },
+              {
+                "type": "bullets",
+                "items": [
+                  "Write the code once, use it many times",
+                  "Give a clear name to a piece of work",
+                  "Keep long programs tidy and easier to fix"
+                ]
+              },
+              {
+                "type": "keypoint",
+                "text": "A function is a reusable, named set of instructions."
+              }
+            ]
+          },
+          {
+            "title": "Defining and calling",
+            "blocks": [
+              {
+                "type": "code",
+                "code": "def greet():\n    print(\"Hello!\")\n    print(\"Welcome to PyPath\")\n\ngreet()\ngreet()",
+                "output": "Hello!\nWelcome to PyPath\nHello!\nWelcome to PyPath",
+                "explanation": [
+                  "def starts a function definition. greet is its name.",
+                  "The empty ( ) and the colon : are required.",
+                  "The indented lines are the function's body.",
+                  "greet() calls the function — each call runs the body once."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Define first, then call",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "Python reads your file from top to bottom. Defining a function does not run it — it only remembers it. The body runs when you call it."
+              },
+              {
+                "type": "code",
+                "code": "say_hi()\n\ndef say_hi():\n    print(\"Hi\")",
+                "output": "NameError: name 'say_hi' is not defined",
+                "explanation": [
+                  "The call on line 1 happens before Python has read the def.",
+                  "Python stops with a NameError."
+                ]
+              },
+              {
+                "type": "tip",
+                "title": "Common mistake",
+                "text": "Calling a function above its def. Always put the def first and the call below it."
+              }
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "questions": [
+          {
+            "id": "l4s1q1",
+            "prompt": "Which keyword starts a function definition?",
+            "options": [
+              "def",
+              "function",
+              "func",
+              "define"
+            ],
+            "correctIndex": 0,
+            "explanation": "Python uses def. Other languages use words like function, which is why it's a common guess."
+          },
+          {
+            "id": "l4s1q2",
+            "prompt": "What does this code print?",
+            "options": [
+              "B\nA",
+              "A\nB",
+              "B",
+              "A"
+            ],
+            "correctIndex": 0,
+            "explanation": "The def is only remembered, not run. print(\"B\") runs first, then show() prints A.",
+            "code": "def show():\n    print(\"A\")\n\nprint(\"B\")\nshow()"
+          },
+          {
+            "id": "l4s1q3",
+            "prompt": "Find the bug.",
+            "options": [
+              "Function names must be written in capitals",
+              "The colon : is missing at the end of the def line",
+              "print must not be indented",
+              "def lines need a semicolon"
+            ],
+            "correctIndex": 1,
+            "explanation": "Like if and for, a def line ends with a colon. Lowercase names and an indented body are correct.",
+            "code": "def hello()\n    print(\"hi\")"
+          },
+          {
+            "id": "l4s1q4",
+            "prompt": "What does this code print?",
+            "options": [
+              "beep",
+              "beep()\nbeep()\nbeep()",
+              "Nothing, the function is never called",
+              "beep\nbeep\nbeep"
+            ],
+            "correctIndex": 3,
+            "explanation": "beep() is called three times and each call prints beep once.",
+            "code": "def beep():\n    print(\"beep\")\n\nbeep()\nbeep()\nbeep()"
+          },
+          {
+            "id": "l4s1q5",
+            "prompt": "What happens when Python reads a def block?",
+            "options": [
+              "It runs the body immediately",
+              "It prints the function's name",
+              "It remembers the function but does not run its body yet",
+              "It deletes the function after one call"
+            ],
+            "correctIndex": 2,
+            "explanation": "The body only runs when the function is called. That's why you can define a function and use it many times later."
+          }
+        ],
+        "passPercent": 60
+      }
+    },
+    {
+      "id": "l4s2",
+      "code": "4.2",
+      "title": "Parameters",
+      "summary": "Pass values into a function so it can work with them.",
+      "estimatedMinutes": 5,
+      "steps": [
+        "learn",
+        "quiz"
+      ],
+      "lesson": {
+        "pages": [
+          {
+            "title": "Passing information in",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "A parameter is a variable in the brackets of the def line. When you call the function, the value you pass is stored in it."
+              },
+              {
+                "type": "code",
+                "code": "def greet(name):\n    print(f\"Hello, {name}!\")\n\ngreet(\"Asha\")\ngreet(\"Ravi\")",
+                "output": "Hello, Asha!\nHello, Ravi!",
+                "explanation": [
+                  "name is the parameter.",
+                  "In the first call name is \"Asha\", in the second it's \"Ravi\"."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "More than one parameter",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "Separate parameters with commas. Values are matched in order."
+              },
+              {
+                "type": "code",
+                "code": "def add(a, b):\n    print(a + b)\n\nadd(2, 3)\nadd(10, 5)",
+                "output": "5\n15",
+                "explanation": [
+                  "In add(2, 3), a is 2 and b is 3.",
+                  "In add(10, 5), a is 10 and b is 5."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Parameters vs arguments",
+            "blocks": [
+              {
+                "type": "bullets",
+                "items": [
+                  "Parameter: the name in the def line, like pet",
+                  "Argument: the actual value you pass in the call, like \"Tom\"",
+                  "Arguments are matched to parameters by position"
+                ]
+              },
+              {
+                "type": "code",
+                "code": "def describe(pet, age):\n    print(f\"{pet} is {age} years old\")\n\ndescribe(\"Tom\", 3)\ndescribe(3, \"Tom\")",
+                "output": "Tom is 3 years old\n3 is Tom years old",
+                "explanation": [
+                  "Swapping the arguments swaps the values.",
+                  "Python doesn't know what you meant — order matters."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Missing arguments",
+            "blocks": [
+              {
+                "type": "code",
+                "code": "def square(n):\n    print(n * n)\n\nsquare()",
+                "output": "TypeError: square() missing 1 required positional argument: 'n'",
+                "explanation": [
+                  "square needs one value for n.",
+                  "Calling it with empty brackets is an error."
+                ]
+              },
+              {
+                "type": "tip",
+                "title": "Common mistake",
+                "text": "Calling a function with fewer (or more) arguments than it has parameters."
+              },
+              {
+                "type": "keypoint",
+                "text": "Each parameter needs a value when the function is called."
+              }
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "questions": [
+          {
+            "id": "l4s2q1",
+            "prompt": "What does this code print?",
+            "options": [
+              "Hi!",
+              "word!",
+              "Hi",
+              "Error"
+            ],
+            "correctIndex": 0,
+            "explanation": "word holds \"Hi\", and + joins it with \"!\". The name word is not printed — its value is.",
+            "code": "def shout(word):\n    print(word + \"!\")\n\nshout(\"Hi\")"
+          },
+          {
+            "id": "l4s2q2",
+            "prompt": "In def area(width, height):, what are width and height?",
+            "options": [
+              "Arguments",
+              "Parameters",
+              "Return values",
+              "Global variables"
+            ],
+            "correctIndex": 1,
+            "explanation": "The names in the def line are parameters. Arguments are the values you pass when calling, like area(3, 4)."
+          },
+          {
+            "id": "l4s2q3",
+            "prompt": "What does this code print?",
+            "options": [
+              "7",
+              "3 - 10",
+              "-7",
+              "Error"
+            ],
+            "correctIndex": 2,
+            "explanation": "a is 3 and b is 10 because arguments are matched in order, so a - b is -7.",
+            "code": "def minus(a, b):\n    print(a - b)\n\nminus(3, 10)"
+          }
+        ],
+        "passPercent": 60
+      }
+    },
+    {
+      "id": "l4s3",
+      "code": "4.3",
+      "title": "Return values",
+      "summary": "Send a result back from a function with return.",
+      "estimatedMinutes": 7,
+      "steps": [
+        "learn",
+        "quiz"
+      ],
+      "lesson": {
+        "pages": [
+          {
+            "title": "Sending a value back",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "return hands a value back to the code that called the function. You can store it in a variable."
+              },
+              {
+                "type": "code",
+                "code": "def double(n):\n    return n * 2\n\nresult = double(4)\nprint(result)",
+                "output": "8",
+                "explanation": [
+                  "double(4) works out 4 * 2.",
+                  "return sends 8 back.",
+                  "result stores the returned value."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Using returned values directly",
+            "blocks": [
+              {
+                "type": "code",
+                "code": "def square(n):\n    return n * n\n\nprint(square(3) + square(4))",
+                "output": "25",
+                "explanation": [
+                  "square(3) returns 9 and square(4) returns 16.",
+                  "You can use them in maths just like numbers: 9 + 16 = 25."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "print vs return",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "print shows a value on the screen. return gives it back to your code. They are not the same."
+              },
+              {
+                "type": "code",
+                "code": "def shown(n):\n    print(n * 2)\n\ndef given(n):\n    return n * 2\n\na = shown(5)\nb = given(5)\nprint(a)\nprint(b)",
+                "output": "10\nNone\n10",
+                "explanation": [
+                  "shown(5) prints 10 but returns nothing.",
+                  "A function without return gives back None, Python's \"no value\".",
+                  "given(5) returns 10, so b holds 10."
+                ]
+              },
+              {
+                "type": "keypoint",
+                "text": "If you need to use the result later, return it."
+              }
+            ]
+          },
+          {
+            "title": "return ends the function",
+            "blocks": [
+              {
+                "type": "code",
+                "code": "def check_age(age):\n    if age >= 18:\n        return \"Adult\"\n    return \"Minor\"\n\nprint(check_age(20))\nprint(check_age(12))",
+                "output": "Adult\nMinor",
+                "explanation": [
+                  "For 20, the first return runs and the function ends immediately.",
+                  "For 12, the if is skipped and the second return runs."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Forgetting return",
+            "blocks": [
+              {
+                "type": "code",
+                "code": "def total(a, b):\n    a + b\n\nprint(total(2, 3))",
+                "output": "None",
+                "explanation": [
+                  "a + b is worked out, then thrown away.",
+                  "Nothing is returned, so the call gives None."
+                ]
+              },
+              {
+                "type": "tip",
+                "title": "Common mistake",
+                "text": "Writing the calculation but forgetting the word return. The function then gives back None."
+              },
+              {
+                "type": "tip",
+                "title": "Tip",
+                "text": "Lines after a return inside the same block never run."
+              }
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "questions": [
+          {
+            "id": "l4s3q1",
+            "prompt": "What does this code print?",
+            "options": [
+              "7",
+              "12",
+              "444",
+              "None"
+            ],
+            "correctIndex": 1,
+            "explanation": "x * 3 with x = 4 is 12, and return sends it back to print. 7 would be 4 + 3, which is not what * does.",
+            "code": "def triple(x):\n    return x * 3\n\nprint(triple(4))"
+          },
+          {
+            "id": "l4s3q2",
+            "prompt": "What does this code print?",
+            "options": [
+              "3\n3",
+              "None",
+              "3",
+              "3\nNone"
+            ],
+            "correctIndex": 3,
+            "explanation": "f prints 3 but has no return, so y is None. Both lines appear: first 3 from inside f, then None.",
+            "code": "def f(x):\n    print(x)\n\ny = f(3)\nprint(y)"
+          },
+          {
+            "id": "l4s3q3",
+            "prompt": "What does return do?",
+            "options": [
+              "Prints the value on the screen",
+              "Sends a value back to the caller and ends the function",
+              "Repeats the function from the top",
+              "Saves the value to a file"
+            ],
+            "correctIndex": 1,
+            "explanation": "return gives a value back to the code that called the function. Showing it on screen is print's job."
+          },
+          {
+            "id": "l4s3q4",
+            "prompt": "This prints None instead of 10. What's the problem?",
+            "options": [
+              "w and h must be named width and height",
+              "print can't call a function",
+              "The function never returns result",
+              "result must be printed inside the function"
+            ],
+            "correctIndex": 2,
+            "explanation": "result is calculated but not returned, so the call gives None. Adding return result fixes it.",
+            "code": "def area(w, h):\n    result = w * h\n\nprint(area(2, 5))"
+          },
+          {
+            "id": "l4s3q5",
+            "prompt": "What does this code print?",
+            "options": [
+              "negative",
+              "positive",
+              "negative\npositive",
+              "None"
+            ],
+            "correctIndex": 0,
+            "explanation": "-2 < 0 is True, so the first return runs and the function ends. The second return is never reached.",
+            "code": "def sign(n):\n    if n < 0:\n        return \"negative\"\n    return \"positive\"\n\nprint(sign(-2))"
+          },
+          {
+            "id": "l4s3q6",
+            "prompt": "Fill in the blank so print(add(1, 2)) shows 3.",
+            "options": [
+              "return",
+              "print",
+              "give",
+              "result ="
+            ],
+            "correctIndex": 0,
+            "explanation": "return a + b sends 3 back to print. Using print inside would show 3 but then print(add(1, 2)) would also show None.",
+            "code": "def add(a, b):\n    ____ a + b"
+          }
+        ],
+        "passPercent": 60
+      }
+    },
+    {
+      "id": "l4s4",
+      "code": "4.4",
+      "title": "Default and keyword arguments",
+      "summary": "Give parameters default values and pass arguments by name.",
+      "estimatedMinutes": 4,
+      "steps": [
+        "learn",
+        "quiz"
+      ],
+      "lesson": {
+        "pages": [
+          {
+            "title": "Default values",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "A parameter can have a default value. If the caller leaves it out, the default is used."
+              },
+              {
+                "type": "code",
+                "code": "def greet(name, greeting=\"Hello\"):\n    print(f\"{greeting}, {name}!\")\n\ngreet(\"Asha\")\ngreet(\"Ravi\", \"Welcome\")",
+                "output": "Hello, Asha!\nWelcome, Ravi!",
+                "explanation": [
+                  "greeting=\"Hello\" sets a default.",
+                  "The first call doesn't pass a greeting, so \"Hello\" is used.",
+                  "The second call passes \"Welcome\", which replaces the default."
+                ]
+              },
+              {
+                "type": "tip",
+                "title": "Common mistake",
+                "text": "Parameters with defaults must come after the ones without. def greet(greeting=\"Hello\", name): is a SyntaxError."
+              }
+            ]
+          },
+          {
+            "title": "Keyword arguments",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "You can pass an argument by naming its parameter: name=value. Then the order doesn't matter, and you can skip defaults you don't want to change."
+              },
+              {
+                "type": "code",
+                "code": "def order(item, size=\"medium\", sugar=1):\n    print(f\"{size} {item}, sugar: {sugar}\")\n\norder(\"tea\")\norder(\"coffee\", sugar=0)\norder(size=\"large\", item=\"juice\")",
+                "output": "medium tea, sugar: 1\nmedium coffee, sugar: 0\nlarge juice, sugar: 1",
+                "explanation": [
+                  "order(\"tea\") uses both defaults.",
+                  "sugar=0 changes only sugar; size keeps its default.",
+                  "With keywords, item and size can be given in any order."
+                ]
+              },
+              {
+                "type": "keypoint",
+                "text": "Defaults make arguments optional. Keywords make calls easier to read."
+              }
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "questions": [
+          {
+            "id": "l4s4q1",
+            "prompt": "What does this code print?",
+            "options": [
+              "ha",
+              "hahaha",
+              "Error: times is missing",
+              "haha"
+            ],
+            "correctIndex": 3,
+            "explanation": "times wasn't passed, so its default 2 is used and \"ha\" * 2 is \"haha\". No error, because the parameter has a default.",
+            "code": "def repeat(word, times=2):\n    print(word * times)\n\nrepeat(\"ha\")"
+          },
+          {
+            "id": "l4s4q2",
+            "prompt": "What does this code print?",
+            "options": [
+              "9-Mia",
+              "Mia-9",
+              "age-name",
+              "Error"
+            ],
+            "correctIndex": 1,
+            "explanation": "Keyword arguments are matched by name, not position, so name is \"Mia\" and age is 9.",
+            "code": "def info(name, age):\n    print(f\"{name}-{age}\")\n\ninfo(age=9, name=\"Mia\")"
+          },
+          {
+            "id": "l4s4q3",
+            "prompt": "Which function definition causes a SyntaxError?",
+            "options": [
+              "def f(a, b=1):",
+              "def f(a=1, b=2):",
+              "def f(a=1, b):",
+              "def f(a, b):"
+            ],
+            "correctIndex": 2,
+            "explanation": "A parameter without a default can't come after one with a default. The other three are all valid."
+          },
+          {
+            "id": "l4s4q4",
+            "prompt": "When is a default value used?",
+            "options": [
+              "When the caller doesn't pass a value for that parameter",
+              "Always, even if a value is passed",
+              "Only when the function returns None",
+              "Only for keyword arguments"
+            ],
+            "correctIndex": 0,
+            "explanation": "A passed value always replaces the default. The default only fills in when nothing is given."
+          }
+        ],
+        "passPercent": 60
+      }
+    },
+    {
+      "id": "l4s5",
+      "code": "4.5",
+      "title": "Scope",
+      "summary": "Learn where variables live: inside or outside a function.",
+      "estimatedMinutes": 7,
+      "steps": [
+        "learn",
+        "quiz"
+      ],
+      "lesson": {
+        "pages": [
+          {
+            "title": "Local variables",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "A variable created inside a function is local: it only exists while the function runs. Outside the function, it's gone."
+              },
+              {
+                "type": "code",
+                "code": "def make_tea():\n    cups = 2\n    print(f\"Making {cups} cups\")\n\nmake_tea()\nprint(cups)",
+                "output": "Making 2 cups\nNameError: name 'cups' is not defined",
+                "explanation": [
+                  "cups is created inside make_tea.",
+                  "When the function ends, cups disappears.",
+                  "The last line can't find it, so Python raises a NameError."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Reading global variables",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "A variable created outside all functions is global. Functions can read it."
+              },
+              {
+                "type": "code",
+                "code": "shop = \"PyCafe\"\n\ndef welcome():\n    print(f\"Welcome to {shop}\")\n\nwelcome()",
+                "output": "Welcome to PyCafe",
+                "explanation": [
+                  "shop is defined at the top level.",
+                  "welcome() can read it without any extra work."
+                ]
+              }
+            ]
+          },
+          {
+            "title": "Same name, different box",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "If you assign to a name inside a function, Python makes a new local variable — even if a global has the same name. The global is not changed."
+              },
+              {
+                "type": "code",
+                "code": "x = 10\n\ndef change():\n    x = 99\n    print(f\"inside: {x}\")\n\nchange()\nprint(f\"outside: {x}\")",
+                "output": "inside: 99\noutside: 10",
+                "explanation": [
+                  "x = 99 creates a local x inside change().",
+                  "The global x is still 10."
+                ]
+              },
+              {
+                "type": "keypoint",
+                "text": "Assigning inside a function creates a local variable."
+              }
+            ]
+          },
+          {
+            "title": "Pass in, return out",
+            "blocks": [
+              {
+                "type": "text",
+                "text": "The clean way for a function to change a value: take it as a parameter and return the new value. The caller decides where to store it."
+              },
+              {
+                "type": "code",
+                "code": "score = 10\n\ndef add_bonus(points):\n    return points + 5\n\nscore = add_bonus(score)\nprint(score)",
+                "output": "15",
+                "explanation": [
+                  "score is passed in as points.",
+                  "The function returns 15.",
+                  "The caller stores it back in score."
+                ]
+              },
+              {
+                "type": "tip",
+                "title": "Common mistake",
+                "text": "Expecting total = total + n inside a function to change a global total. Python treats total as local and raises an error. Pass it in and return it instead."
+              },
+              {
+                "type": "bullets",
+                "items": [
+                  "Local: made inside a function, lives only during the call",
+                  "Global: made outside, readable everywhere",
+                  "Each call gets fresh local variables"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "quiz": {
+        "questions": [
+          {
+            "id": "l4s5q1",
+            "prompt": "What happens when this runs?",
+            "options": [
+              "It prints 5",
+              "A NameError, because y only exists inside f",
+              "It prints None",
+              "It prints 0"
+            ],
+            "correctIndex": 1,
+            "explanation": "y is local to f and disappears when f ends. Calling f() first doesn't make y available outside.",
+            "code": "def f():\n    y = 5\n\nf()\nprint(y)"
+          },
+          {
+            "id": "l4s5q2",
+            "prompt": "What does this code print?",
+            "options": [
+              "1",
+              "NameError",
+              "None",
+              "0"
+            ],
+            "correctIndex": 0,
+            "explanation": "Functions can read global variables, so show() prints the global n.",
+            "code": "n = 1\n\ndef show():\n    print(n)\n\nshow()"
+          },
+          {
+            "id": "l4s5q3",
+            "prompt": "What does this code print?",
+            "options": [
+              "7",
+              "None",
+              "3",
+              "NameError"
+            ],
+            "correctIndex": 2,
+            "explanation": "a = 7 inside set_a creates a new local a. The global a is untouched and is still 3.",
+            "code": "a = 3\n\ndef set_a():\n    a = 7\n\nset_a()\nprint(a)"
+          },
+          {
+            "id": "l4s5q4",
+            "prompt": "What is a local variable?",
+            "options": [
+              "A variable every function can change",
+              "A variable created at the top of the file",
+              "A variable created inside a function that only exists while it runs",
+              "A variable that never changes"
+            ],
+            "correctIndex": 2,
+            "explanation": "Local means \"belongs to this function call\". A variable at the top of the file is global."
+          },
+          {
+            "id": "l4s5q5",
+            "prompt": "Which statement is true?",
+            "options": [
+              "Each call of a function gets fresh local variables",
+              "Local variables keep their values between calls",
+              "A function can't read variables from outside",
+              "Parameters are global variables"
+            ],
+            "correctIndex": 0,
+            "explanation": "Locals are created again on every call and thrown away at the end. Functions can read globals, and parameters are local."
+          },
+          {
+            "id": "l4s5q6",
+            "prompt": "Calling add(5) raises an error. What's the cleanest fix?",
+            "options": [
+              "Rename n to total",
+              "Pass total in and return the new value: total = add(total, 5)",
+              "Call add() twice",
+              "Delete the line total = 0"
+            ],
+            "correctIndex": 1,
+            "explanation": "Assigning total inside the function makes it local, so total + n has nothing to read. Passing it in and returning it avoids the problem.",
+            "code": "total = 0\n\ndef add(n):\n    total = total + n\n\nadd(5)"
+          },
+          {
+            "id": "l4s5q7",
+            "prompt": "What does this code print?",
+            "options": [
+              "2",
+              "0",
+              "None",
+              "1"
+            ],
+            "correctIndex": 3,
+            "explanation": "c is a fresh local variable on every call: it starts at 0 and becomes 1. The first call's c doesn't carry over, so it's not 2.",
+            "code": "def count():\n    c = 0\n    c += 1\n    return c\n\ncount()\nprint(count())"
+          }
+        ],
+        "passPercent": 60
+      }
+    }
+  ],
+  "available": true
+}
