@@ -56,6 +56,39 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: self
+          # Full history, so files deleted from PyPath/ by mistake can be restored below.
+          fetch-depth: 0
+
+      - name: Restore PyPath files missing from this repo
+        run: |
+          set -euo pipefail
+          # If PyPath/ (or part of it) was deleted and only some files were uploaded again,
+          # bring back every older PyPath file from git history. Current files are never
+          # overwritten; only files that are missing now are added (latest version wins).
+          cd self
+          rm -rf /tmp/hist && mkdir -p /tmp/hist
+          git rev-list --reverse HEAD -- PyPath > /tmp/commits.txt || true
+          while IFS= read -r c; do
+            if git archive --format=tar -o /tmp/snap.tar "$c" PyPath 2> /dev/null; then
+              tar -xf /tmp/snap.tar -C /tmp/hist
+            fi
+          done < /tmp/commits.txt
+          if [ -d /tmp/hist/PyPath ]; then
+            mkdir -p PyPath
+            (cd /tmp/hist/PyPath && find . -type f | cut -c3- | sort) > /tmp/hist_files.txt
+            restored=0
+            while IFS= read -r f; do
+              if [ ! -e "PyPath/$f" ]; then
+                mkdir -p "$(dirname "PyPath/$f")"
+                cp -p "/tmp/hist/PyPath/$f" "PyPath/$f"
+                echo "Restored from history: PyPath/$f"
+                restored=$((restored + 1))
+              fi
+            done < /tmp/hist_files.txt
+            echo "Restored $restored file(s) from git history."
+          else
+            echo "No PyPath history found; using the files as they are."
+          fi
 
       - name: Checkout base project
         uses: actions/checkout@v4
@@ -280,7 +313,7 @@ jobs:
           fi
 
           if [ "${{ inputs.arm64_only }}" = "true" ]; then ABI=arm64-v8a; else ABI=universal; fi
-          NAME="PyPath-v0.3.0-debug-${ABI}-build${{ github.run_number }}.apk"
+          NAME="PyPath-v0.4.0-debug-${ABI}-build${{ github.run_number }}.apk"
           mkdir -p dist
           cp "$APK_SRC" "dist/$NAME"
           ls -l "dist/$NAME"
@@ -304,7 +337,7 @@ jobs:
         with:
           tag_name: ${{ env.TAG }}
           target_commitish: ${{ github.sha }}
-          name: PyPath v0.3.0 build ${{ github.run_number }} (${{ steps.apk.outputs.abi }})
+          name: PyPath v0.4.0 build ${{ github.run_number }} (${{ steps.apk.outputs.abi }})
           body: |
             Debug APK built from ${{ github.sha }} with freshly generated course and sounds.
             ABI: ${{ steps.apk.outputs.abi }}
